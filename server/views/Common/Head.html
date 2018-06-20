@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><?= title ?></title>
+    <meta name="keywords" content="<?= keywords ?>" />
+    <meta name="description" content="<?= description ?>" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
+
+    <? if (controller == "Bootstrap") { ?>
+        <link rel="stylesheet" href="<?= serverPrefix ?>/css/bootstrap.min.css" />
+    <? } ?>
+
+    <meta name="appBaseUrl" content="<?= serverPrefix ?>/" />
+    <meta name="format-detection" content="telephone=no"/>
+
+    <!-- uc强制竖屏 -->
+    <meta name="screen-orientation" content="portrait" />
+    <!-- QQ强制竖屏 -->
+    <meta name="x5-orientation" content="portrait" />
+    <!-- SEO -->
+    <meta name="applicable-device" content="mobile" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+
+    <? if (env === "production") { ?>
+        <? if (react) { ?>
+            <link rel="stylesheet" href="<?= serverPrefix ?>/pages/react/index.css?v=<?= version ?>" />
+        <? } ?>
+    <? } ?>
+
+    <script type="text/javascript">
+        window.configName = '<?= configName ?>';
+    </script>
+</head>
+<body onselectstart="return false" style="overflow-y: auto">
+
+<div id="main">
+    <div class="main-frame">
+        <div class="main-viewport">
+
+            <? if (react) { ?>
+                <div id="app"></div>
+            <? } ?>
+
+        </div>
+        <div class="main-state"></div>
+    </div>
+</div>
+<div id="footer"></div>
