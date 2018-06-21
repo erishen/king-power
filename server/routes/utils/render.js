@@ -91,17 +91,13 @@ obj.renderFullPage = function(params){
 </html>
     `
 
-    if(isRelease){
-        return minify(html, {
-            collapseWhitespace: true,
-            conservativeCollapse: true,
-            removeComments: true,
-            minifyCSS: true,
-            minifyJS: true
-        });
-    }
-    else
-        return html;
+    return minify(html, {
+        collapseWhitespace: true,
+        conservativeCollapse: true,
+        removeComments: true,
+        minifyCSS: true,
+        minifyJS: true
+    });
 };
 
 export default obj;
