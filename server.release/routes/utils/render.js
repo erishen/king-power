@@ -44,7 +44,7 @@ obj.renderFullPage = function (params) {
     var cssHref = '';
     switch (action) {
         case "bootstrap":
-            cssHref = '<link rel="stylesheet" href="' + serverPrefix + '/css/bootstrap.min.css" />';
+            cssHref = '<link rel="stylesheet" href="' + serverPrefix + '/kingCSS/bootstrap.min.css" />';
             break;
     }
 
