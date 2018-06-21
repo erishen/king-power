@@ -14,7 +14,7 @@ const Config = require('../../config/' + test + '.js').default;
 if(document.getElementById('app') != null){
     let basename = projectConfig.serverPrefix;
     if(window.ssr == 'true'){
-        basename += '/kingSSR';
+        basename += projectConfig.ssrParameter;
     }
 
     let content = [];

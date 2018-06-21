@@ -5,6 +5,7 @@ import staticRouter from './static';
 import utilsRouter from './utils';
 
 var serverPrefix = projectConfig.serverPrefix;
+var ssrParameter = projectConfig.ssrParameter;
 
 var utilsGoRouter = function(controller, params, configJSON){
     if(params == undefined){
@@ -24,8 +25,12 @@ var indexRouter = function(configJSON){
 
 export default function(app, configJSON){
     app.use('/', indexRouter(configJSON));
-    app.use(serverPrefix + '/', indexRouter(configJSON));
-    app.use(serverPrefix + '/kingSSR', ssrRouter.goRoute(configJSON));
+
+    if(serverPrefix != ''){
+        app.use(serverPrefix + '/', indexRouter(configJSON));
+    }
+
+    app.use(serverPrefix + ssrParameter, ssrRouter.goRoute(configJSON));
     app.use(serverPrefix + '/static', staticRouter.goRoute(configJSON));
     app.use(serverPrefix + '/api', apiRouter);
     app.use(serverPrefix + '/*', indexRouter(configJSON));

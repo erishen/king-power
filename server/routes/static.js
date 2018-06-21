@@ -9,6 +9,7 @@ import render from './utils/render';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import fetch from '../service/fetch';
+import projectConfig from '../config/project';
 
 let isDev = process.env.NODE_ENV !== 'production';
 let Config = null;
@@ -93,7 +94,7 @@ const renderReactHome = function(req, res, route, html, callback){
             let filename = route;
             if(filename != ''){
                 console.log('filename', filename);
-                let filePathPrefix = path.join(__dirname, '../../public') + '/kingSSR/';
+                let filePathPrefix = path.join(__dirname, '../../public') + projectConfig.ssrParameter + '/';
                 if (!fs.existsSync(filePathPrefix))
                     fs.mkdirSync(filePathPrefix);
 

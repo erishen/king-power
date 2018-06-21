@@ -3,5 +3,6 @@
  */
 export default {
     /** 服务站点URL前缀 */
-    serverPrefix: '/webapp'
+    serverPrefix: '',
+    ssrParameter: '/kingSSR'
 };

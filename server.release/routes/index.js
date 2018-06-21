@@ -6,8 +6,12 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (app, configJSON) {
     app.use('/', indexRouter(configJSON));
-    app.use(serverPrefix + '/', indexRouter(configJSON));
-    app.use(serverPrefix + '/kingSSR', _ssr2.default.goRoute(configJSON));
+
+    if (serverPrefix != '') {
+        app.use(serverPrefix + '/', indexRouter(configJSON));
+    }
+
+    app.use(serverPrefix + ssrParameter, _ssr2.default.goRoute(configJSON));
     app.use(serverPrefix + '/static', _static2.default.goRoute(configJSON));
     app.use(serverPrefix + '/api', _api2.default);
     app.use(serverPrefix + '/*', indexRouter(configJSON));
@@ -36,6 +40,7 @@ var _utils2 = _interopRequireDefault(_utils);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var serverPrefix = _project2.default.serverPrefix;
+var ssrParameter = _project2.default.ssrParameter;
 
 var utilsGoRouter = function utilsGoRouter(controller, params, configJSON) {
     if (params == undefined) {

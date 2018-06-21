@@ -36,12 +36,16 @@ var _fetch = require('../service/fetch');
 
 var _fetch2 = _interopRequireDefault(_fetch);
 
+var _project = require('../config/project');
+
+var _project2 = _interopRequireDefault(_project);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/**
- * Created by lei_sun on 2017/12/1.
- */
-var isDev = process.env.NODE_ENV !== 'production';
+var isDev = process.env.NODE_ENV !== 'production'; /**
+                                                    * Created by lei_sun on 2017/12/1.
+                                                    */
+
 var Config = null;
 
 // 测试数据
@@ -112,7 +116,7 @@ var renderReactHome = function renderReactHome(req, res, route, html, callback) 
             var filename = route;
             if (filename != '') {
                 console.log('filename', filename);
-                var filePathPrefix = _path2.default.join(__dirname, '../../public') + '/kingSSR/';
+                var filePathPrefix = _path2.default.join(__dirname, '../../public') + _project2.default.ssrParameter + '/';
                 if (!_fs2.default.existsSync(filePathPrefix)) _fs2.default.mkdirSync(filePathPrefix);
 
                 if (filename.indexOf('/') != -1) {

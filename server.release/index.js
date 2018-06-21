@@ -93,10 +93,10 @@ obj.start = function (configJSON) {
 
         app.use(serverPrefix, _express2.default.static(_path2.default.join(__dirname, publicDictionary)));
 
-        (0, _index2.default)(app, configJSON);
-
         var server = _http2.default.createServer(app);
         require('reload')(server, app);
+
+        (0, _index2.default)(app, configJSON);
 
         // browsersync is a nice choice when modifying only views (with their css & js)
         var bs = require('browser-sync').create();
