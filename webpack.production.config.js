@@ -10,7 +10,7 @@ var productionConfig = {
         react: ['babel-polyfill', './pages/react']
     },
     output: {
-        filename: './pages/[name]/bundle.js',
+        filename: './kingPAGES/[name]/bundle.js',
         path: path.resolve(__dirname, './public'),
         publicPath: '/'
     },
@@ -39,9 +39,9 @@ var productionConfig = {
         }]
     },
     plugins: [
-        new CleanWebpackPlugin(['public/pages']),
+        new CleanWebpackPlugin(['public/kingPAGES']),
         new ExtractTextPlugin({
-            filename: './pages/[name]/index.css',
+            filename: './kingPAGES/[name]/index.css',
             allChunks: true
         }),
         new UglifyJSPlugin(),

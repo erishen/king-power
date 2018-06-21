@@ -93,7 +93,7 @@ const renderReactHome = function(req, res, route, html, callback){
             let filename = route;
             if(filename != ''){
                 console.log('filename', filename);
-                let filePathPrefix = path.join(__dirname, '../../public') + '/ssr/';
+                let filePathPrefix = path.join(__dirname, '../../public') + '/kingSSR/';
                 if (!fs.existsSync(filePathPrefix))
                     fs.mkdirSync(filePathPrefix);
 

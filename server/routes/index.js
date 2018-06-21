@@ -25,7 +25,7 @@ var indexRouter = function(configJSON){
 export default function(app, configJSON){
     app.use('/', indexRouter(configJSON));
     app.use(serverPrefix + '/', indexRouter(configJSON));
-    app.use(serverPrefix + '/ssr', ssrRouter.goRoute(configJSON));
+    app.use(serverPrefix + '/kingSSR', ssrRouter.goRoute(configJSON));
     app.use(serverPrefix + '/static', staticRouter.goRoute(configJSON));
     app.use(serverPrefix + '/api', apiRouter);
     app.use(serverPrefix + '/*', indexRouter(configJSON));

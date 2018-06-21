@@ -46,7 +46,7 @@ obj.renderFullPage = function(params){
 
     ${cssHref}
 
-    <link rel="stylesheet" href="${serverPrefix}/pages/react/index.css?v=${version}" />
+    <link rel="stylesheet" href="${serverPrefix}/kingPAGES/react/index.css?v=${version}" />
 
     <meta name="appBaseUrl" content="${serverPrefix}/" />
     <meta name="format-detection" content="telephone=no"/>
@@ -85,8 +85,8 @@ obj.renderFullPage = function(params){
           window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\u003c')}
     </script>
 
-    <script src="${serverPrefix}/vendor.a3e5a454ebdab64af001.js"></script>
-    <script src="${serverPrefix}/pages/react/bundle.js?v=${version}" type="text/javascript"></script>
+    <script src="${serverPrefix}/kingJS/vendor.a3e5a454ebdab64af001.js"></script>
+    <script src="${serverPrefix}/kingPAGES/react/bundle.js?v=${version}" type="text/javascript"></script>
 </body>
 </html>
     `

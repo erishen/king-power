@@ -13,7 +13,7 @@ var devConfig = {
         react: ['babel-polyfill', './pages/react', hotMiddlewareScript]
     },
     output: {
-        filename: './pages/[name]/bundle.js',
+        filename: './kingPAGES/[name]/bundle.js',
         path: path.resolve(__dirname, './public'),
         publicPath: publicPath
     },
