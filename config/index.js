@@ -4,6 +4,7 @@
 import Test from '../components/index';
 import Bootstrap from '../components/bootstrap';
 import Lazyload from '../components/lazyload';
+import Arrange from '../components/arrange';
 
 // ssr => default true, can set false.
 export default {
@@ -31,5 +32,9 @@ export default {
     lazyload: {
         action: 'lazyload',
         component: Lazyload
+    },
+    arrange: {
+        action: 'arrange',
+        component: Arrange
     }
 }
