@@ -12,9 +12,13 @@ export default class Arrange extends Component<{}> {
         this.namesArr = []; // 工作人员名单列表
         this.mensWeekend = []; // 周末人员排班列表
         this.dateWeekend = []; // 周末日期列表
+        this.workDateNearWeekend = []; // 临近周末前后两天的日期列表
+        this.workOtherDate = []; // 其他工作日期列表
         this.arrangeArr = []; // 人员安排列表
         this.daysWeekend = 0; // 周末天数(周六 + 周日)
         this.tempWeekendFlag = false; // 临时增加周末设置, 人员数目少于周末数
+        this.lastRandomName = []; // 上一次生成的随机人员
+        this.randomTimes = 0; // 随机次数
 
         this.state = {
             arranges: null
@@ -127,6 +131,74 @@ export default class Arrange extends Component<{}> {
         }
     }
 
+    // type: 4,5, 1,2
+    getRandomNamesNearWeekend(namesArr, type, exclude, callback){
+        if(this.randomTimes > 20){
+            this.randomTimes = 0;
+            return callback && callback('空白');
+        }
+
+        var randomName = this.getRandomName(namesArr);
+        var searchFlag = false;
+
+        _.each(exclude, (item, index)=>{
+            if(item == randomName){
+                searchFlag = true;
+                return false;
+            }
+        });
+
+        _.each(this.lastRandomName, (item, index)=>{
+            if(item == randomName){
+                searchFlag = true;
+                return false;
+            }
+        });
+
+        //console.log('searchFlag', searchFlag);
+        if(!searchFlag){
+            if(this.lastRandomName.length == 2)
+                this.lastRandomName.pop();
+
+            this.lastRandomName.push(randomName);
+            return callback && callback(randomName);
+        }
+        else {
+            this.randomTimes++;
+            this.getRandomNamesNearWeekend(namesArr, type, exclude, callback);
+        }
+    }
+
+    arrangeWorkDateNearWeekend(namesArr, index){
+        if(index >= 0 && index < this.workDateNearWeekend.length){
+            var item = this.workDateNearWeekend[index];
+            var type = item.type;
+            var exclude = item.exclude;
+
+            this.randomTimes = 0;
+            this.getRandomNamesNearWeekend(namesArr, type, exclude, (randomName)=>{
+                item.men = randomName;
+                index++;
+                this.arrangeWorkDateNearWeekend(namesArr, index);
+            });
+        }
+    }
+
+    arrangeOtherDate(namesArr, index){
+        if(index >= 0 && index < this.workOtherDate.length){
+            var item = this.workOtherDate[index];
+            var type = item.type;
+            var exclude = item.exclude;
+
+            this.randomTimes = 0;
+            this.getRandomNamesNearWeekend(namesArr, type, exclude, (randomName)=>{
+                item.men = randomName;
+                index++;
+                this.arrangeOtherDate(namesArr, index);
+            });
+        }
+    }
+
     componentDidMount() {
         var namesArr = this.namesArr;
         console.log('namesArr', namesArr, moment().format('YYYY-MM-DD'));
@@ -161,34 +233,143 @@ export default class Arrange extends Component<{}> {
             if(diffDay >= 0){
                 for(var i = 0; i < Math.ceil(daysWeekend / 2); i++){
                     if(this.dateWeekend.length < daysWeekend) {
-                        this.dateWeekend.push(diffDay + 1 + 7 * i);
+                        this.dateWeekend.push({ type: 6, value: diffDay + 1 + 7 * i });
                     }
 
                     if(this.dateWeekend.length < daysWeekend) {
-                        this.dateWeekend.push(diffDay + 2 + 7 * i);
+                        this.dateWeekend.push({ type: 7, value: diffDay + 2 + 7 * i });
                     }
                 }
             }
             else { // 本月1日为周日
-                this.dateWeekend.push(1);
+                this.dateWeekend.push({ type:7, value: 1 });
 
                 for(var i = 1; i < Math.ceil(daysWeekend / 2); i++) {
                     if(this.dateWeekend.length < daysWeekend) {
-                        this.dateWeekend.push(1 + 6 * i);
+                        this.dateWeekend.push({ type: 6, value: 1 + 6 * i });
                     }
 
                     if(this.dateWeekend.length < daysWeekend) {
-                        this.dateWeekend.push(1 + 7 * i);
+                        this.dateWeekend.push({ type: 7, value: 1 + 7 * i });
                     }
                 }
             }
             console.log('dateWeekend', this.dateWeekend);
 
             _.each(this.dateWeekend, (item, index)=>{
-                this.arrangeArr[item] = this.mensWeekend[index];
+                var type = item.type;
+                var value = item.value;
+                item.men = this.mensWeekend[index];
+                //this.arrangeArr[value] = this.mensWeekend[index];
+
+                if(type == 6){
+                    var firstMen = this.mensWeekend[index];
+                    var secondMen = this.mensWeekend[index+1];
+
+                    if(value - 2 >= 1 && value - 2 <= daysInMonth)
+                        this.workDateNearWeekend.push({ type: 4, value: value - 2, exclude: [ firstMen, secondMen ] });
+
+                    if(value - 1 >= 1 && value - 1 <= daysInMonth)
+                        this.workDateNearWeekend.push({ type: 5, value: value - 1, exclude: [ firstMen, secondMen ] });
+                }
+                else if(type == 7){
+                    var firstMen = this.mensWeekend[index-1];
+                    var secondMen = this.mensWeekend[index];
+
+                    if(value + 1 >= 1 && value + 1 <= daysInMonth)
+                        this.workDateNearWeekend.push({ type: 1, value: value + 1, exclude: [ firstMen, secondMen ] });
+
+                    if(value + 2 >= 1 && value + 2 <= daysInMonth)
+                        this.workDateNearWeekend.push({ type: 2, value: value + 2, exclude: [ firstMen, secondMen ] });
+                }
+            });
+
+            // 临近周末前后两天的人员列表
+            this.arrangeWorkDateNearWeekend(namesArr, 0);
+
+            var tempDate = this.dateWeekend;
+            tempDate = tempDate.concat(this.workDateNearWeekend);
+            //console.log('tempDate', tempDate);
+
+            for(var i = 1; i <= daysInMonth; i++){
+                var searchFlag = false;
+
+                _.each(tempDate, (item, index) => {
+                    var value = item.value;
+
+                    if(value == i){
+                        searchFlag = true;
+                        return false;
+                    }
+                });
+
+                if(!searchFlag){
+                    var date = i;
+                    if(date < 10)
+                        date = '0' + date;
+                    var type = moment(year + '-' + month + '-' + date).day();
+
+                    var beforeSecondDate = i - 2;
+                    var beforeFirstDate = i - 1;
+                    var afterFirstDate = i + 1;
+                    var afterSecondDate = i + 2;
+                    var exclude = [];
+
+                    var appendExclude = function(date){
+                        _.each(tempDate, (item, index) => {
+                            var value = item.value;
+                            var men = item.men;
+
+                            if(value == date){
+                                var excludeFlag = false;
+                                _.each(exclude, (excludeItem, excludeIndex)=>{
+                                    if(excludeItem == men){
+                                        excludeFlag = true;
+                                        return false;
+                                    }
+                                });
+
+                                if(!excludeFlag)
+                                    exclude.push(men);
+                                return false;
+                            }
+                        });
+                    };
+
+                    if(beforeSecondDate >= 1){
+                        appendExclude(beforeSecondDate);
+                    }
+
+                    if(beforeFirstDate >= 1){
+                        appendExclude(beforeFirstDate);
+                    }
+
+                    if(afterFirstDate <= daysInMonth){
+                        appendExclude(afterFirstDate);
+                    }
+
+                    if(afterSecondDate <= daysInMonth){
+                        appendExclude(afterSecondDate);
+                    }
+
+                    this.workOtherDate.push({ type: type, value: i, exclude: exclude });
+                }
+            }
+
+            // 其他工作日期人员列表
+            this.lastRandomName.length = 0;
+            this.randomTimes = 0;
+            this.arrangeOtherDate(namesArr, 0);
+
+            tempDate = tempDate.concat(this.workOtherDate);
+            console.log('tempDate', tempDate);
+
+            _.each(tempDate, (item, index) => {
+                this.arrangeArr[item.value] = item.men;
             });
 
             console.log('arrangeArr', this.arrangeArr);
+
             this.setState({
                 arranges: this.arrangeArr
             });
@@ -203,21 +384,33 @@ export default class Arrange extends Component<{}> {
         let { arranges } = this.state;
         console.log('arranges', arranges);
 
-        let content = [];
+        let contentLeft = [];
+        let contentRight = [];
+
         if(arranges){
             _.each(arranges, (item, index)=>{
                 if(item){
+                    var date = index;
                     if(index < 10)
-                        index = '0' + index;
+                        date = '0' + index;
 
-                    const date = this.year + '-' + this.month + '-' + index;
-                    content.push(<div key={"arrange" + index}><p>{date}: {item}</p></div>);
+                    const today = this.year + '-' + this.month + '-' + date;
+
+                    if(index % 2 == 1){
+                        contentLeft.push(<div key={"arrange" + index}><p>{today}: {item}</p></div>);
+                    }
+                    else {
+                        contentRight.push(<div key={"arrange" + index}><p>{today}: {item}</p></div>);
+                    }
                 }
             });
         }
 
         return (
-            <div>{content}</div>
+            <div class="arrange">
+                <div class="left">{contentLeft}</div>
+                <div class="right">{contentRight}</div>
+            </div>
         );
     }
 }

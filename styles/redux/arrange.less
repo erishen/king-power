@@ -1,0 +1,16 @@
+.arrange {
+  &:extend(.ls-flex);
+  &:extend(.ls-flex1);
+  &:extend(.ls-row);
+  &:extend(.ls-justify-center);
+  &:extend(.ls-align-start);
+  padding: 10px;
+
+  .left, .right {
+    &:extend(.ls-flex);
+    &:extend(.ls-flex1);
+    &:extend(.ls-column);
+    &:extend(.ls-justify-start);
+    &:extend(.ls-align-start);
+  }
+}
