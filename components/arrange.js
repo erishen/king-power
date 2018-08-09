@@ -9,7 +9,7 @@ export default class Arrange extends Component<{}> {
         super(props);
         this.year = 0;
         this.month = 0;
-        this.namesArr = []; // 工作人员名单列表
+        this.namesArr = ['张三', '李四', '赵五', '王六', '孙七', '候八']; // 工作人员名单列表
         this.mensWeekend = []; // 周末人员排班列表
         this.dateWeekend = []; // 周末日期列表
         this.workDateNearWeekend = []; // 临近周末前后两天的日期列表
@@ -29,16 +29,24 @@ export default class Arrange extends Component<{}> {
         if (typeof window !== 'undefined') {
             var urlObj = util.getUrlObj(window.location.href);
             console.log('urlObj', urlObj);
-            var month = parseInt(urlObj.month, 10);
-            var names = decodeURI(urlObj.names);
-            if(names){
-                this.namesArr = names.split(',');
+
+            if(urlObj.year){
+                var year = parseInt(urlObj.year, 10);
+                this.year = year;
             }
 
-            if(month > 0 && month < 13){
-                if(month < 10)
-                    month = '0' + month;
-                this.month = month;
+            if(urlObj.month){
+                var month = parseInt(urlObj.month, 10);
+                if(month > 0 && month < 13){
+                    if(month < 10)
+                        month = '0' + month;
+                    this.month = month;
+                }
+            }
+
+            if(urlObj.names){
+                var names = decodeURI(urlObj.names);
+                this.namesArr = names.split(/,|，/);
             }
         }
     }
@@ -135,7 +143,7 @@ export default class Arrange extends Component<{}> {
     getRandomNamesNearWeekend(namesArr, type, exclude, callback){
         if(this.randomTimes > 20){
             this.randomTimes = 0;
-            return callback && callback('空白');
+            return callback && callback('待定');
         }
 
         var randomName = this.getRandomName(namesArr);
@@ -203,13 +211,19 @@ export default class Arrange extends Component<{}> {
         var namesArr = this.namesArr;
         console.log('namesArr', namesArr, moment().format('YYYY-MM-DD'));
 
-        if(namesArr){
+        if(namesArr && namesArr.length > 0){
             console.log('randomName', this.getRandomName(namesArr));
 
             var year = moment().format('YYYY');
             var month = moment().format('MM');
             console.log('year', year, 'month', month);
-            this.year = year;
+
+            if(this.year == 0){
+                this.year = year;
+            }
+            else {
+                year = this.year;
+            }
 
             if(this.month == 0){
                 this.month = month;
@@ -230,7 +244,9 @@ export default class Arrange extends Component<{}> {
             // 找出本月第一个周六
             var firstDay = moment(year + '-' + month + '-01').day();
             var diffDay = 6 - firstDay;
-            if(diffDay >= 0){
+            console.log('diffDay', diffDay, firstDay);
+
+            if(diffDay >= 0 && diffDay < 6){
                 for(var i = 0; i < Math.ceil(daysWeekend / 2); i++){
                     if(this.dateWeekend.length < daysWeekend) {
                         this.dateWeekend.push({ type: 6, value: diffDay + 1 + 7 * i });
@@ -365,7 +381,10 @@ export default class Arrange extends Component<{}> {
             console.log('tempDate', tempDate);
 
             _.each(tempDate, (item, index) => {
-                this.arrangeArr[item.value] = item.men;
+                this.arrangeArr[item.value] = {
+                    type: item.type,
+                    men: item.men
+                }
             });
 
             console.log('arrangeArr', this.arrangeArr);
@@ -396,11 +415,21 @@ export default class Arrange extends Component<{}> {
 
                     const today = this.year + '-' + this.month + '-' + date;
 
-                    if(index % 2 == 1){
-                        contentLeft.push(<div key={"arrange" + index}><p>{today}: {item}</p></div>);
-                    }
-                    else {
-                        contentRight.push(<div key={"arrange" + index}><p>{today}: {item}</p></div>);
+                    var men = item.men;
+                    var type = parseInt(item.type, 10);
+
+                    var weeks = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+                    if(type >= 1 && type <= 7){
+                        var week = weeks[type-1];
+                        var content = today + '(' + week + '): ' + men;
+
+                        if(index % 2 == 1){
+                            contentLeft.push(<div key={"arrange" + index}><p>{content}</p></div>);
+                        }
+                        else {
+                            contentRight.push(<div key={"arrange" + index}><p>{content}</p></div>);
+                        }
                     }
                 }
             });
