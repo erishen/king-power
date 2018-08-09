@@ -3,6 +3,10 @@ import _ from 'lodash';
 import moment from 'moment';
 import util from '../common/helper/util';
 
+const tempName = '待定';
+const tempTimes = 0;
+const diffMenNums = 2;
+
 export default class Arrange extends Component<{}> {
 
     constructor(props) {
@@ -14,29 +18,32 @@ export default class Arrange extends Component<{}> {
         this.dateWeekend = []; // 周末日期列表
         this.workDateNearWeekend = []; // 临近周末前后两天的日期列表
         this.workOtherDate = []; // 其他工作日期列表
-        this.arrangeArr = []; // 人员安排列表
+        this.arrangeArr = []; // 人员安排列表(日期维度)
+        this.menArr = [];  //  人品安排列表（人员维度）
         this.daysWeekend = 0; // 周末天数(周六 + 周日)
         this.tempWeekendFlag = false; // 临时增加周末设置, 人员数目少于周末数
         this.lastRandomName = []; // 上一次生成的随机人员
         this.randomTimes = 0; // 随机次数
+        this.recallTimes = 0; // 重复调用次数
 
         this.state = {
-            arranges: null
+            arranges: null,
+            mens: null
         };
     }
 
     componentWillMount(){
         if (typeof window !== 'undefined') {
-            var urlObj = util.getUrlObj(window.location.href);
+            const urlObj = util.getUrlObj(window.location.href);
             console.log('urlObj', urlObj);
 
             if(urlObj.year){
-                var year = parseInt(urlObj.year, 10);
+                const year = parseInt(urlObj.year, 10);
                 this.year = year;
             }
 
             if(urlObj.month){
-                var month = parseInt(urlObj.month, 10);
+                let month = parseInt(urlObj.month, 10);
                 if(month > 0 && month < 13){
                     if(month < 10)
                         month = '0' + month;
@@ -45,10 +52,26 @@ export default class Arrange extends Component<{}> {
             }
 
             if(urlObj.names){
-                var names = decodeURI(urlObj.names);
+                const names = decodeURI(urlObj.names);
                 this.namesArr = names.split(/,|，/);
             }
+
+            this.initMenArr();
         }
+    }
+
+    initMenArr(){
+        _.each(this.namesArr, (item, index)=>{
+            this.menArr.push({
+                men: item,
+                dates: []
+            });
+        });
+
+        this.menArr.push({
+            men: tempName,
+            dates: []
+        });
     }
 
     stringToDate(dateString){
@@ -59,10 +82,10 @@ export default class Arrange extends Component<{}> {
     countWorkDay(date1, date2){
         date1 = this.stringToDate(date1);
         date2 = this.stringToDate(date2);
-        var delta = (date2 - date1) / (1000 * 60 * 60 * 24) + 1; // 计算出总时间
+        const delta = (date2 - date1) / (1000 * 60 * 60 * 24) + 1; // 计算出总时间
 
-        var weeks = 0;
-        for(var i = 0; i < delta; i++){
+        let weeks = 0;
+        for(let i = 0; i < delta; i++){
             if(date1.getDay() == 0 || date1.getDay() == 6) weeks ++;  // 若为周六或周天则加1
             date1 = date1.valueOf();
             date1 += 1000 * 60 * 60 * 24;
@@ -73,25 +96,25 @@ export default class Arrange extends Component<{}> {
 
     getDaysInOneMonth(year, month){
         month = parseInt(month, 10);
-        var d = new Date(year, month, 0);
+        const d = new Date(year, month, 0);
         return d.getDate();
     }
 
     getRandomName(namesArr){
         if(namesArr && namesArr.length > 0) {
-            var namesArrLen = namesArr.length;
-            var randomIndex = util.getRandomNum(0, namesArrLen - 1);
-            var randomName = namesArr[randomIndex];
+            const namesArrLen = namesArr.length;
+            const randomIndex = util.getRandomNum(0, namesArrLen - 1);
+            const randomName = namesArr[randomIndex];
             return randomName;
         }
         return null;
     }
 
     appendMensWeekend(namesArr, callback){
-        var randomName = this.getRandomName(namesArr);
+        const randomName = this.getRandomName(namesArr);
 
         if(randomName != null){
-            var flag = true;
+            let flag = true;
             _.each(this.mensWeekend, (item, index)=>{
                 if(item == randomName){
                     flag = false;
@@ -102,8 +125,8 @@ export default class Arrange extends Component<{}> {
 
             if(this.tempWeekendFlag)
             {
-                var mensWeekendLen = this.mensWeekend.length;
-                for(var i = 0; i < this.daysWeekend - mensWeekendLen; i++){
+                const mensWeekendLen = this.mensWeekend.length;
+                for(let i = 0; i < this.daysWeekend - mensWeekendLen; i++){
                     this.mensWeekend.push(this.mensWeekend[i]);
                 }
                 return callback && callback();
@@ -143,11 +166,11 @@ export default class Arrange extends Component<{}> {
     getRandomNamesNearWeekend(namesArr, type, exclude, callback){
         if(this.randomTimes > 20){
             this.randomTimes = 0;
-            return callback && callback('待定');
+            return callback && callback(tempName);
         }
 
-        var randomName = this.getRandomName(namesArr);
-        var searchFlag = false;
+        const randomName = this.getRandomName(namesArr);
+        let searchFlag = false;
 
         _.each(exclude, (item, index)=>{
             if(item == randomName){
@@ -179,9 +202,8 @@ export default class Arrange extends Component<{}> {
 
     arrangeWorkDateNearWeekend(namesArr, index){
         if(index >= 0 && index < this.workDateNearWeekend.length){
-            var item = this.workDateNearWeekend[index];
-            var type = item.type;
-            var exclude = item.exclude;
+            const item = this.workDateNearWeekend[index];
+            const { type, exclude } = item;
 
             this.randomTimes = 0;
             this.getRandomNamesNearWeekend(namesArr, type, exclude, (randomName)=>{
@@ -194,9 +216,8 @@ export default class Arrange extends Component<{}> {
 
     arrangeOtherDate(namesArr, index){
         if(index >= 0 && index < this.workOtherDate.length){
-            var item = this.workOtherDate[index];
-            var type = item.type;
-            var exclude = item.exclude;
+            const item = this.workOtherDate[index];
+            const { type, exclude } = item;
 
             this.randomTimes = 0;
             this.getRandomNamesNearWeekend(namesArr, type, exclude, (randomName)=>{
@@ -207,15 +228,15 @@ export default class Arrange extends Component<{}> {
         }
     }
 
-    componentDidMount() {
-        var namesArr = this.namesArr;
+    getRandomNames(callback) {
+        const namesArr = this.namesArr;
         console.log('namesArr', namesArr, moment().format('YYYY-MM-DD'));
 
         if(namesArr && namesArr.length > 0){
             console.log('randomName', this.getRandomName(namesArr));
 
-            var year = moment().format('YYYY');
-            var month = moment().format('MM');
+            let year = moment().format('YYYY');
+            let month = moment().format('MM');
             console.log('year', year, 'month', month);
 
             if(this.year == 0){
@@ -232,9 +253,9 @@ export default class Arrange extends Component<{}> {
                 month = this.month;
             }
 
-            var daysInMonth = this.getDaysInOneMonth(year, month);
-            var daysWork = this.countWorkDay(year + '-' + month + '-01', year + '-' + month + '-' + daysInMonth);
-            var daysWeekend = daysInMonth - daysWork;
+            const daysInMonth = this.getDaysInOneMonth(year, month);
+            const daysWork = this.countWorkDay(year + '-' + month + '-01', year + '-' + month + '-' + daysInMonth);
+            const daysWeekend = daysInMonth - daysWork;
             console.log('daysInMonth', daysInMonth, 'daysWork', daysWork, 'daysWeekend', daysWeekend);
 
             this.daysWeekend = daysWeekend;
@@ -242,12 +263,12 @@ export default class Arrange extends Component<{}> {
             console.log('this.mensWeekend', this.mensWeekend);
 
             // 找出本月第一个周六
-            var firstDay = moment(year + '-' + month + '-01').day();
-            var diffDay = 6 - firstDay;
+            const firstDay = moment(year + '-' + month + '-01').day();
+            const diffDay = 6 - firstDay;
             console.log('diffDay', diffDay, firstDay);
 
             if(diffDay >= 0 && diffDay < 6){
-                for(var i = 0; i < Math.ceil(daysWeekend / 2); i++){
+                for(let i = 0; i < Math.ceil(daysWeekend / 2); i++){
                     if(this.dateWeekend.length < daysWeekend) {
                         this.dateWeekend.push({ type: 6, value: diffDay + 1 + 7 * i });
                     }
@@ -260,7 +281,7 @@ export default class Arrange extends Component<{}> {
             else { // 本月1日为周日
                 this.dateWeekend.push({ type:7, value: 1 });
 
-                for(var i = 1; i < Math.ceil(daysWeekend / 2); i++) {
+                for(let i = 1; i < Math.ceil(daysWeekend / 2); i++) {
                     if(this.dateWeekend.length < daysWeekend) {
                         this.dateWeekend.push({ type: 6, value: 1 + 6 * i });
                     }
@@ -273,14 +294,14 @@ export default class Arrange extends Component<{}> {
             console.log('dateWeekend', this.dateWeekend);
 
             _.each(this.dateWeekend, (item, index)=>{
-                var type = item.type;
-                var value = item.value;
+                const { type, value } = item;
+
                 item.men = this.mensWeekend[index];
                 //this.arrangeArr[value] = this.mensWeekend[index];
 
                 if(type == 6){
-                    var firstMen = this.mensWeekend[index];
-                    var secondMen = this.mensWeekend[index+1];
+                    const firstMen = this.mensWeekend[index];
+                    const secondMen = this.mensWeekend[index+1];
 
                     if(value - 2 >= 1 && value - 2 <= daysInMonth)
                         this.workDateNearWeekend.push({ type: 4, value: value - 2, exclude: [ firstMen, secondMen ] });
@@ -289,8 +310,8 @@ export default class Arrange extends Component<{}> {
                         this.workDateNearWeekend.push({ type: 5, value: value - 1, exclude: [ firstMen, secondMen ] });
                 }
                 else if(type == 7){
-                    var firstMen = this.mensWeekend[index-1];
-                    var secondMen = this.mensWeekend[index];
+                    const firstMen = this.mensWeekend[index-1];
+                    const secondMen = this.mensWeekend[index];
 
                     if(value + 1 >= 1 && value + 1 <= daysInMonth)
                         this.workDateNearWeekend.push({ type: 1, value: value + 1, exclude: [ firstMen, secondMen ] });
@@ -303,15 +324,15 @@ export default class Arrange extends Component<{}> {
             // 临近周末前后两天的人员列表
             this.arrangeWorkDateNearWeekend(namesArr, 0);
 
-            var tempDate = this.dateWeekend;
+            let tempDate = this.dateWeekend;
             tempDate = tempDate.concat(this.workDateNearWeekend);
             //console.log('tempDate', tempDate);
 
-            for(var i = 1; i <= daysInMonth; i++){
-                var searchFlag = false;
+            for(let i = 1; i <= daysInMonth; i++){
+                let searchFlag = false;
 
                 _.each(tempDate, (item, index) => {
-                    var value = item.value;
+                    const value = item.value;
 
                     if(value == i){
                         searchFlag = true;
@@ -320,24 +341,23 @@ export default class Arrange extends Component<{}> {
                 });
 
                 if(!searchFlag){
-                    var date = i;
+                    let date = i;
                     if(date < 10)
                         date = '0' + date;
-                    var type = moment(year + '-' + month + '-' + date).day();
+                    const type = moment(year + '-' + month + '-' + date).day();
 
-                    var beforeSecondDate = i - 2;
-                    var beforeFirstDate = i - 1;
-                    var afterFirstDate = i + 1;
-                    var afterSecondDate = i + 2;
-                    var exclude = [];
+                    const beforeSecondDate = i - 2;
+                    const beforeFirstDate = i - 1;
+                    const afterFirstDate = i + 1;
+                    const afterSecondDate = i + 2;
+                    let exclude = [];
 
-                    var appendExclude = function(date){
+                    const appendExclude = function(date){
                         _.each(tempDate, (item, index) => {
-                            var value = item.value;
-                            var men = item.men;
+                            const { value, men } = item;
 
                             if(value == date){
-                                var excludeFlag = false;
+                                let excludeFlag = false;
                                 _.each(exclude, (excludeItem, excludeIndex)=>{
                                     if(excludeItem == men){
                                         excludeFlag = true;
@@ -378,21 +398,96 @@ export default class Arrange extends Component<{}> {
             this.arrangeOtherDate(namesArr, 0);
 
             tempDate = tempDate.concat(this.workOtherDate);
-            console.log('tempDate', tempDate);
+            console.log('tempDate', tempDate, this.menArr);
 
+            let recallFlag = false;
             _.each(tempDate, (item, index) => {
-                this.arrangeArr[item.value] = {
-                    type: item.type,
-                    men: item.men
+                const { value, type, men } = item;
+
+                if(men == tempName) { // 出现待定的情况，需要重新生成
+                    if(this.recallTimes <= tempTimes){
+                        recallFlag = true;
+                        return true;
+                    }
+                }
+
+                this.arrangeArr[value] = {
+                    type: type,
+                    men: men
+                };
+
+                _.each(this.menArr, (menItem, menIndex)=>{
+                    if(men == menItem.men){
+                        menItem.dates.push(value);
+                    }
+                });
+                console.log('testDate', this.menArr);
+            });
+
+            let datesMin = 0;
+            let datesMax = 0;
+
+            _.each(this.menArr, (menItem, menIndex)=>{
+                menItem.dates = _.sortBy(menItem.dates);
+
+                if(menItem.men != tempName){
+                    const datesLen = menItem.dates.length;
+
+                    if(datesMin == 0)
+                        datesMin = datesLen;
+                    else if(datesMin > datesLen)
+                        datesMin = datesLen;
+
+                    if(datesMax == 0)
+                        datesMax = datesLen;
+                    else if(datesMax < datesLen)
+                        datesMax = datesLen;
                 }
             });
 
-            console.log('arrangeArr', this.arrangeArr);
+            if(this.recallTimes <= tempTimes){
+                if(datesMax - datesMin >= diffMenNums)
+                    recallFlag = true;
+            }
 
-            this.setState({
-                arranges: this.arrangeArr
-            });
+            console.log('arrangeArr', this.arrangeArr, this.menArr, datesMax, datesMin, this.recallTimes, recallFlag);
+
+            if(recallFlag){
+                this.recallTimes++;
+
+                this.dateWeekend.length = 0;
+                this.workDateNearWeekend.length = 0;
+                this.workOtherDate.length = 0;
+                this.arrangeArr.length = 0;
+                this.menArr.length = 0;
+                this.initMenArr();
+                console.log('this.menArr', this.menArr);
+            }
+            else {
+                this.recallTimes = 0;
+            }
+            return callback && callback(recallFlag);
         }
+    }
+
+    getRandomNamesWrapper(callback){
+        this.getRandomNames((recallFlag)=>{
+            if(recallFlag){
+                this.getRandomNamesWrapper(callback);
+            }
+            else {
+                return callback && callback();
+            }
+        });
+    }
+
+    componentDidMount(){
+        this.getRandomNamesWrapper(()=>{
+            this.setState({
+                arranges: this.arrangeArr,
+                mens: this.menArr
+            });
+        });
     }
 
     componentWillUnmount() {
@@ -400,29 +495,28 @@ export default class Arrange extends Component<{}> {
     }
 
     render() {
-        let { arranges } = this.state;
-        console.log('arranges', arranges);
+        const { arranges, mens } = this.state;
+        console.log('arranges', arranges, mens);
 
         let contentLeft = [];
         let contentRight = [];
+        let contentMens = [];
 
         if(arranges){
             _.each(arranges, (item, index)=>{
                 if(item){
-                    var date = index;
+                    let date = index;
                     if(index < 10)
                         date = '0' + index;
 
                     const today = this.year + '-' + this.month + '-' + date;
-
-                    var men = item.men;
-                    var type = parseInt(item.type, 10);
-
-                    var weeks = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                    const men = item.men;
+                    const type = parseInt(item.type, 10);
+                    const weeks = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
                     if(type >= 1 && type <= 7){
-                        var week = weeks[type-1];
-                        var content = today + '(' + week + '): ' + men;
+                        const week = weeks[type-1];
+                        const content = today + '(' + week + '): ' + men;
 
                         if(index % 2 == 1){
                             contentLeft.push(<div key={"arrange" + index}><p>{content}</p></div>);
@@ -435,10 +529,28 @@ export default class Arrange extends Component<{}> {
             });
         }
 
+        if(mens){
+            _.each(mens, (item, index)=>{
+                const men = item.men;
+                const dates = item.dates;
+
+                if(men == tempName && dates.length == 0)
+                    return true;
+
+                const menContent = men + '(' + dates.length + "): " + dates.join('日, ') + '日';
+                contentMens.push(<div key={"men" + index}><p>{menContent}</p></div>);
+            });
+        }
+
         return (
             <div class="arrange">
-                <div class="left">{contentLeft}</div>
-                <div class="right">{contentRight}</div>
+                <div class="content">
+                    <div class="left">{contentLeft}</div>
+                    <div class="right">{contentRight}</div>
+                </div>
+                <div class="men">
+                    {contentMens}
+                </div>
             </div>
         );
     }

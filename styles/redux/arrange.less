@@ -1,16 +1,28 @@
-.arrange {
+.arrange{
   &:extend(.ls-flex);
   &:extend(.ls-flex1);
-  &:extend(.ls-row);
+  &:extend(.ls-column);
   &:extend(.ls-justify-center);
   &:extend(.ls-align-start);
-  padding: 10px;
 
-  .left, .right {
+  .content {
     &:extend(.ls-flex);
     &:extend(.ls-flex1);
-    &:extend(.ls-column);
-    &:extend(.ls-justify-start);
+    &:extend(.ls-row);
+    &:extend(.ls-justify-center);
     &:extend(.ls-align-start);
+
+    .left, .right {
+      padding: 5px;
+      &:extend(.ls-flex);
+      &:extend(.ls-flex1);
+      &:extend(.ls-column);
+      &:extend(.ls-justify-start);
+      &:extend(.ls-align-start);
+    }
+  }
+
+  .men {
+    padding: 10px;
   }
 }
