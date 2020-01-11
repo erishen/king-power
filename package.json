@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "cross-env NODE_ENV=dev supervisor -i server/views -w server,common,config -e node,js,html test/debug.js",
+    "dev": "cross-env NODE_ENV=dev supervisor -i server/views -w server,common,config -e node,js,html test/debug.js",
     "release": "node test/release.js",
     "build": "webpack --config webpack.production.config.js -p && gulp && babel server -d server.release && babel common -d common.release"
   },

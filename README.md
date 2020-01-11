@@ -2,6 +2,6 @@
 react,redux,ssr,express,webpack,babel
 
 # command
-npm start
+npm run dev
 npm run build
 npm run release
